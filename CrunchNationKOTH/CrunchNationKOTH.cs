@@ -21,6 +21,10 @@ using VRage.Game.ModAPI;
 using VRageMath;
 using Sandbox.Engine.Multiplayer;
 using Sandbox.Game.Multiplayer;
+using VRage;
+using Sandbox.ModAPI.Ingame;
+using VRage.Game.ModAPI.Ingame;
+using VRage.ObjectBuilders;
 
 namespace CrunchNationKOTH
 {
@@ -29,7 +33,23 @@ namespace CrunchNationKOTH
         private static List<KothConfig> KOTHs = new List<KothConfig>();
         private static List<DateTime> captureIntervals = new List<DateTime>();
         private static Dictionary<String, int> amountCaptured = new Dictionary<String, int>();
-        public static KothConfig koth = new KothConfig();
+        public static KothConfig config = new KothConfig();
+
+        public static Logger Log = LogManager.GetCurrentClassLogger();
+
+        private TorchSessionManager sessionManager;
+        public override void Init(ITorchBase torch)
+        {
+            base.Init(torch);
+            Log.Info("Loading Crunch Koth");
+            sessionManager = Torch.Managers.GetManager<TorchSessionManager>();
+            if (sessionManager != null)
+                sessionManager.SessionStateChanged += SessionChanged;
+            SetupConfig();
+        }
+
+
+
         public static string GetNationTag(IMyFaction fac)
         {
             if (fac.Description.Contains("UNIN"))
@@ -62,12 +82,12 @@ namespace CrunchNationKOTH
                 {
                     if (block.IsFunctional && block.IsWorking)
                     {
-                        if (block is IMyFunctionalBlock bl)
+                        if (block is Sandbox.ModAPI.IMyFunctionalBlock bl)
                         {
                             bl.Enabled = true;
                         }
 
-                        if (block is IMyBeacon beacon)
+                        if (block is Sandbox.ModAPI.IMyBeacon beacon)
                         {
                             beacon.Radius = koth.captureBlockBroadcastDistance;
                         }
@@ -100,17 +120,7 @@ namespace CrunchNationKOTH
             return false;
         }
 
-        public static Logger Log = LogManager.GetCurrentClassLogger();
 
-        private TorchSessionManager sessionManager;
-        public override void Init(ITorchBase torch)
-        {
-            base.Init(torch);
-            Log.Info("Loading Crunch Koth");
-            sessionManager = Torch.Managers.GetManager<TorchSessionManager>();
-            if (sessionManager != null)
-                sessionManager.SessionStateChanged += SessionChanged;
-        }
         private static TorchSessionState state1;
         private void SessionChanged(ITorchSession session, TorchSessionState state)
         {
@@ -151,34 +161,64 @@ namespace CrunchNationKOTH
             }
         }
         int tick = 0;
+        private static string path = "";
+        public static KothConfig LoadConfig()
+        {
+            FileUtils utils = new FileUtils();
+            config = utils.ReadFromXmlFile<KothConfig>(path + "//CrunchKOTH//config.xml");
 
+
+            return config;
+        }
+        public static KothConfig SaveConfig()
+        {
+            FileUtils utils = new FileUtils();
+            utils.WriteToXmlFile<KothConfig>(path + "//CrunchKOTH//config.xml", config);
+
+            return config;
+        }
+        private void SetupConfig()
+        {
+            path = this.StoragePath;
+            FileUtils utils = new FileUtils();
+            if (File.Exists(this.StoragePath + "//CrunchKOTH//config.xml"))
+            {
+                config = utils.ReadFromXmlFile<KothConfig>(this.StoragePath + "//CrunchKOTH//config.xml");
+                utils.WriteToXmlFile<KothConfig>(this.StoragePath + "//CrunchKOTH//config.xml", config, false);
+            }
+            else
+            {
+                config = new KothConfig();
+                utils.WriteToXmlFile<KothConfig>(this.StoragePath + "//CrunchKOTH//config.xml", config, false);
+            }
+        }
         public static MyCubeGrid GetLootboxGrid(Vector3 position)
         {
-            if (MyAPIGateway.Entities.GetEntityById(koth.LootboxGridEntityId) != null)
+            if (MyAPIGateway.Entities.GetEntityById(config.LootboxGridEntityId) != null)
             {
-                if (MyAPIGateway.Entities.GetEntityById(koth.LootboxGridEntityId) is MyCubeGrid grid)
+                if (MyAPIGateway.Entities.GetEntityById(config.LootboxGridEntityId) is MyCubeGrid grid)
                     return grid;
             }
-            BoundingSphereD sphere = new BoundingSphereD(position, koth.CaptureRadiusInMetre + 5000);
+            BoundingSphereD sphere = new BoundingSphereD(position, config.CaptureRadiusInMetre + 5000);
             foreach (MyCubeGrid grid in MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere).OfType<MyCubeGrid>())
             {
                 IMyFaction fac = FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid));
-                if (fac != null && fac.Tag.Equals(koth.KothBuildingOwner))
+                if (fac != null && fac.Tag.Equals(config.KothBuildingOwner))
                 {
-                    foreach (MyCubeBlock block in grid.GetFatBlocks())
+
+                    Sandbox.ModAPI.IMyGridTerminalSystem gridTerminalSys = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+
+                    Sandbox.ModAPI.IMyTerminalBlock block = gridTerminalSys.GetBlockWithName(config.LootBoxTerminalName);
+                    if (block != null)
                     {
-
-                        Log.Info(block.BlockDefinition.Id.TypeId.ToString().Replace("MyObjectBuilder_", "") + " " + block.BlockDefinition.Id.SubtypeName);
-                        if (block.BlockDefinition.Id.TypeId.ToString().Replace("MyObjectBuilder_", "").Equals(koth.lootBoxTypeId) && block.BlockDefinition.Id.SubtypeName.Equals(koth.captureBlockSubtype))
-                        {
-                            return grid;
-                        }
+                        return grid;
                     }
-                }
-            }
-            return null;
-        }
 
+                }
+
+            }
+             return null;
+        }
         public override void Update()
         {
             try
@@ -191,15 +231,15 @@ namespace CrunchNationKOTH
                 bool contested = false;
                 Boolean hasActiveCaptureBlock = false;
                 // Log.Info("We capping?");
-                Vector3 position = new Vector3(koth.x, koth.y, koth.z);
-                BoundingSphereD sphere = new BoundingSphereD(position, koth.CaptureRadiusInMetre);
-             
-                if (DateTime.Now >= koth.nextCaptureInterval)
+                Vector3 position = new Vector3(config.x, config.y, config.z);
+                BoundingSphereD sphere = new BoundingSphereD(position, config.CaptureRadiusInMetre);
+
+                if (DateTime.Now >= config.nextCaptureInterval)
                 {
 
                     //setup a time check for capture time
                     String capturingNation = "";
-                  
+
                     Boolean locked = false;
 
                     Log.Info("Yeah we capping");
@@ -214,10 +254,10 @@ namespace CrunchNationKOTH
                         if (!contested)
                         {
                             IMyFaction fac = FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid));
-                            if (fac != null && !fac.Tag.Equals(koth.KothBuildingOwner))
+                            if (fac != null && !fac.Tag.Equals(config.KothBuildingOwner))
                             {
 
-                                if (IsContested(fac, koth, capturingNation))
+                                if (IsContested(fac, config, capturingNation))
                                 {
                                     contested = true;
                                     break;
@@ -228,7 +268,7 @@ namespace CrunchNationKOTH
                                 }
 
                             }
-                            hasActiveCaptureBlock = DoesGridHaveCaptureBlock(grid, koth);
+                            hasActiveCaptureBlock = DoesGridHaveCaptureBlock(grid, config);
                         }
                     }
 
@@ -242,7 +282,7 @@ namespace CrunchNationKOTH
                             if (fac != null)
                             {
                                 float distance = Vector3.Distance(position, character.PositionComp.GetPosition());
-                                if (IsContested(fac, koth, capturingNation))
+                                if (IsContested(fac, config, capturingNation))
                                 {
                                     contested = true;
                                     break;
@@ -259,12 +299,12 @@ namespace CrunchNationKOTH
                         }
                     }
 
-                    if (!contested && hasActiveCaptureBlock && !koth.CaptureStarted && !capturingNation.Equals(""))
+                    if (!contested && hasActiveCaptureBlock && !config.CaptureStarted && !capturingNation.Equals(""))
                     {
-                        koth.CaptureStarted = true;
-                        koth.nextCaptureAvailable = DateTime.Now.AddMinutes(koth.MinutesBeforeCaptureStarts);
+                        config.CaptureStarted = true;
+                        config.nextCaptureAvailable = DateTime.Now.AddMinutes(config.MinutesBeforeCaptureStarts);
                         Log.Info("Can cap in 10 minutes");
-                        koth.capturingNation = capturingNation;
+                        config.capturingNation = capturingNation;
                         SendChatMessage("Can cap in however many minutes");
                     }
                     else
@@ -272,46 +312,46 @@ namespace CrunchNationKOTH
                         if (!contested && !capturingNation.Equals(""))
                         {
                             Log.Info("Got to the capping check and not contested");
-                            if (DateTime.Now >= koth.nextCaptureAvailable && koth.CaptureStarted)
+                            if (DateTime.Now >= config.nextCaptureAvailable && config.CaptureStarted)
                             {
-                                if (koth.capturingNation.Equals(capturingNation) && !koth.capturingNation.Equals(""))
+                                if (config.capturingNation.Equals(capturingNation) && !config.capturingNation.Equals(""))
                                 {
                                     Log.Info("Is the same nation as whats capping");
                                     if (!hasActiveCaptureBlock)
                                     {
                                         Log.Info("Locking because no active cap block");
-                                        koth.capturingNation = koth.owner;
-                                        koth.nextCaptureAvailable = DateTime.Now.AddHours(1);
+                                        config.capturingNation = config.owner;
+                                        config.nextCaptureAvailable = DateTime.Now.AddHours(1);
                                         //broadcast that its locked
-                                        koth.capturingNation = "";
-                                        koth.amountCaptured = 0;
+                                        config.capturingNation = "";
+                                        config.amountCaptured = 0;
                                         SendChatMessage("Locked because capture blocks are dead");
                                     }
                                     else
                                     {
-                                        koth.nextCaptureInterval = DateTime.Now.AddSeconds(koth.SecondsBetweenCaptureCheck);
-                                        koth.amountCaptured += koth.PointsPerCap;
-                                        if (koth.amountCaptured >= koth.PointsToCap)
+                                        config.nextCaptureInterval = DateTime.Now.AddSeconds(config.SecondsBetweenCaptureCheck);
+                                        config.amountCaptured += config.PointsPerCap;
+                                        if (config.amountCaptured >= config.PointsToCap)
                                         {
                                             //lock
                                             Log.Info("Locking because points went over the threshold");
                                             locked = true;
-                                            koth.nextCaptureInterval = DateTime.Now.AddHours(koth.hoursToLockAfterCap);
-                                            koth.capturingNation = capturingNation;
-                                            koth.owner = capturingNation;
-                                            koth.amountCaptured = 0;
-                                            SendChatMessage(koth.captureMessage.Replace("%NATION%", koth.owner));
+                                            config.nextCaptureInterval = DateTime.Now.AddHours(config.hoursToLockAfterCap);
+                                            config.capturingNation = capturingNation;
+                                            config.owner = capturingNation;
+                                            config.amountCaptured = 0;
+                                            SendChatMessage(config.captureMessage.Replace("%NATION%", config.owner));
                                         }
                                     }
                                 }
                                 else
                                 {
                                     Log.Info("Locking because the capturing nation changed");
-                                    koth.capturingNation = koth.owner;
-                                    koth.nextCaptureAvailable = DateTime.Now.AddHours(1);
+                                    config.capturingNation = config.owner;
+                                    config.nextCaptureAvailable = DateTime.Now.AddHours(1);
                                     //broadcast that its locked
                                     SendChatMessage("Locked because capturing nation has changed.");
-                                    koth.amountCaptured = 0;
+                                    config.amountCaptured = 0;
                                 }
                             }
                             else
@@ -332,15 +372,16 @@ namespace CrunchNationKOTH
 
                     if (!locked)
                     {
-                        koth.nextCaptureInterval = DateTime.Now.AddSeconds(koth.SecondsBetweenCaptureCheck);
+                        config.nextCaptureInterval = DateTime.Now.AddSeconds(config.SecondsBetweenCaptureCheck);
                     }
+                    SaveConfig();
                 }
 
                 //if its not locked, check again for capture in a minute
 
 
 
-                if (DateTime.Now > koth.nextCoreSpawn)
+                if (DateTime.Now > config.nextCoreSpawn)
                 {
                     MyCubeGrid lootgrid = GetLootboxGrid(position);
                     //spawn the cores
@@ -349,34 +390,37 @@ namespace CrunchNationKOTH
                         IMyFaction fac = FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid));
                         if (fac != null)
                         {
-                            if (GetNationTag(fac) != null && GetNationTag(fac).Equals(koth.owner))
+                            if (GetNationTag(fac) != null && GetNationTag(fac).Equals(config.owner))
                             {
-                                hasActiveCaptureBlock = DoesGridHaveCaptureBlock(grid, koth);
+                                hasActiveCaptureBlock = DoesGridHaveCaptureBlock(grid, config);
                             }
 
                         }
 
                     }
-                    if (!koth.owner.Equals("NOBODY"))
+                    if (!config.owner.Equals("NOBODY"))
                     {
 
                         if (hasActiveCaptureBlock)
                         {
                             Log.Info("The owner has an active block so reducing time between spawning");
-                            koth.nextCoreSpawn = DateTime.Now.AddSeconds(koth.SecondsBetweenCoreSpawn / 2);
+                            SpawnCores(lootgrid);
+                            config.nextCoreSpawn = DateTime.Now.AddSeconds(config.SecondsBetweenCoreSpawn / 2);
                             SendChatMessage("Capture block and owned, half spawn time");
                         }
                         else
                         {
                             Log.Info("No block");
+                            SpawnCores(lootgrid);
                             SendChatMessage("No capture block and owned, normal spawn time");
-                            koth.nextCoreSpawn = DateTime.Now.AddSeconds(koth.SecondsBetweenCoreSpawn);
+                            config.nextCoreSpawn = DateTime.Now.AddSeconds(config.SecondsBetweenCoreSpawn);
                         }
                     }
                     else
                     {
                         Log.Info("No owner, normal spawn time");
-                        koth.nextCoreSpawn = DateTime.Now.AddSeconds(koth.SecondsBetweenCoreSpawn);
+                        SpawnCores(lootgrid);
+                        config.nextCoreSpawn = DateTime.Now.AddSeconds(config.SecondsBetweenCoreSpawn);
                         SendChatMessage("No owner, normal spawn time");
                     }
 
@@ -391,7 +435,36 @@ namespace CrunchNationKOTH
                 Log.Error("koth error " + ex.ToString());
             }
         }
+        public static void SpawnCores(MyCubeGrid grid)
+        {
+            if (grid != null)
+            {
+                Sandbox.ModAPI.IMyGridTerminalSystem gridTerminalSys = MyAPIGateway.TerminalActionsHelper.GetTerminalSystemForGrid(grid);
+                MyDefinitionId rewardItem = getRewardItem();
+                Sandbox.ModAPI.IMyTerminalBlock block = gridTerminalSys.GetBlockWithName(config.LootBoxTerminalName);
+                if (block != null && rewardItem != null)
+                {
+                    Log.Info("Should spawn item");
+                    MyItemType itemType = new MyInventoryItemFilter(rewardItem.TypeId + "/" + rewardItem.SubtypeName).ItemType;
+                    block.GetInventory().AddItems(1, (MyObjectBuilder_PhysicalObject)MyObjectBuilderSerializer.CreateNewObject(rewardItem));
 
+                }
+                else
+                {
+                    Log.Info("Cant spawn item");
+                }
+                return;
+            }
+
+
+
+        }
+
+        public static MyDefinitionId getRewardItem()
+        {
+            MyDefinitionId.TryParse("MyObjectBuilder_Ingot", "Iron", out MyDefinitionId id);
+            return id;
+        }
         public static void SendChatMessage(String message, ulong steamID = 0)
         {
             Logger _chatLog = LogManager.GetLogger("Chat");

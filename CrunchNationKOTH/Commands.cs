@@ -15,8 +15,8 @@ namespace CrunchNationKOTH
         [Permission(MyPromoteLevel.Admin)]
         public void ContractDetails()
         {
-            CrunchNationKOTH.koth.nextCaptureAvailable = DateTime.Now;
-            CrunchNationKOTH.koth.nextCaptureInterval = DateTime.Now;
+            CrunchNationKOTH.config.nextCaptureAvailable = DateTime.Now;
+            CrunchNationKOTH.config.nextCaptureInterval = DateTime.Now;
           
         }
     }

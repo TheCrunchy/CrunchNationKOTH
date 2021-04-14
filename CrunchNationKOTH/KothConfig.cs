@@ -13,18 +13,17 @@ namespace CrunchNationKOTH
         public double z = 100000;
         public string KothName = "Thannian";
 
-        public string KothBuildingOwner = "ACME";
+        public string KothBuildingOwner = "BOB";
         public long LootboxGridEntityId = 0;
-        public string lootBoxTypeId = "Something";
-        public string lootBoxSubTypeId = "Golden something";
+        public string LootBoxTerminalName = "LOOT BOX";
         public string capturingNation = "";
         public int amountCaptured = 0;
-        public int MinutesBeforeCaptureStarts = 1;
+        public int MinutesBeforeCaptureStarts = 10;
         public int CaptureRadiusInMetre = 20;
-        public int SecondsBetweenCoreSpawn = 20;
-        public int SecondsBetweenCaptureCheck = 10;
+        public int SecondsBetweenCoreSpawn = 180;
+        public int SecondsBetweenCaptureCheck = 60;
         public int PointsPerCap = 10;
-        public int PointsToCap = 20;
+        public int PointsToCap = 100;
         public  int MinsPerCaptureBroadcast = 5;
         public string owner = "NOBODY";
         public string captureBlockType = "Beacon";
