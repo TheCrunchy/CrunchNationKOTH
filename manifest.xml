@@ -1,0 +1,6 @@
+<?xml version="1.0"?>
+<PluginManifest xmlns:xsd="http://www.w3.org/2001/XMLSchema" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+  <Name>Crunch Nation Koth</Name>
+  <Guid>6e6d76de-e727-4bc6-9114-9fc246b70001</Guid>
+  <Version>v1.0</Version>
+</PluginManifest>
