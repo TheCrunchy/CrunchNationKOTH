@@ -64,6 +64,7 @@
     <Reference Include="Torch.Server">
       <HintPath>..\..\FixPlayerCommand\FixPlayerCommand\bin\Debug\Torch.Server.exe</HintPath>
     </Reference>
+    <Reference Include="VRage, Version=1.0.0.0, Culture=neutral, PublicKeyToken=null" />
     <Reference Include="VRage.Game">
       <HintPath>..\..\FixPlayerCommand\FixPlayerCommand\bin\Debug\VRage.Game.dll</HintPath>
     </Reference>
@@ -75,8 +76,10 @@
     </Reference>
   </ItemGroup>
   <ItemGroup>
+    <Compile Include="Commands.cs" />
     <Compile Include="CrunchNationKOTH.cs" />
     <Compile Include="FacUtils.cs" />
+    <Compile Include="FileUtils.cs" />
     <Compile Include="KothConfig.cs" />
     <Compile Include="LootConfig.cs" />
     <Compile Include="Properties\AssemblyInfo.cs" />

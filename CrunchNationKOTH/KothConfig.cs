@@ -14,20 +14,21 @@ namespace CrunchNationKOTH
         public string KothName = "Thannian";
 
         public string KothBuildingOwner = "ACME";
+        public long LootboxGridEntityId = 0;
         public string lootBoxTypeId = "Something";
         public string lootBoxSubTypeId = "Golden something";
         public string capturingNation = "";
         public int amountCaptured = 0;
-        public int MinutesBeforeCaptureStarts = 10;
+        public int MinutesBeforeCaptureStarts = 1;
         public int CaptureRadiusInMetre = 20;
-        public int SecondsBetweenCoreSpawn = 180;
-        public int SecondsBetweenCaptureCheck = 60;
+        public int SecondsBetweenCoreSpawn = 20;
+        public int SecondsBetweenCaptureCheck = 10;
         public int PointsPerCap = 10;
-        public int PointsToCap = 300;
+        public int PointsToCap = 20;
         public  int MinsPerCaptureBroadcast = 5;
         public string owner = "NOBODY";
         public string captureBlockType = "Beacon";
-        public string captureBlockSubtype = "Beacon";
+        public string captureBlockSubtype = "LargeBlockBeacon";
         public Boolean captureBlockNeedsToBeTurnedOn = true;
         public Boolean captureBlockNeedsToBroadcast = true;
         public int captureBlockBroadcastDistance = 10000;
@@ -41,9 +42,10 @@ namespace CrunchNationKOTH
         public Boolean doDiscordMessages = true;
         public string DiscordChannelId = "";
 
-        public DateTime nextCaptureInterval = DateTime.Now.AddSeconds(5);
-        public DateTime nextCoreSpawn = DateTime.Now.AddSeconds(5);
-        public DateTime nextBroadcast = DateTime.Now.AddMinutes(5);
+        public DateTime nextCaptureInterval = DateTime.Now;
+        public DateTime nextCoreSpawn = DateTime.Now;
+        public DateTime nextBroadcast = DateTime.Now;
+        public Boolean CaptureStarted = false;
 
     }
 }
