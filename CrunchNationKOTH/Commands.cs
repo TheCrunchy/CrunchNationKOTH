@@ -11,6 +11,14 @@ namespace CrunchNationKOTH
 {
     public class Commands : CommandModule
     {
+        [Command("koth reload", "reload koth")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void UnlockKoth()
+        {
+            CrunchNationKOTH.LoadConfig();
+            Context.Respond("Reloaded");
+        }
+
         [Command("koth unlock", "unlock koth")]
         [Permission(MyPromoteLevel.Admin)]
         public void UnlockKoth(string name)
@@ -25,20 +33,16 @@ namespace CrunchNationKOTH
                 }
               
             }
-         
-          
         }
         [Command("koth output", "unlock koth")]
         [Permission(MyPromoteLevel.Admin)]
-        public void OutputAllKothNames(string name)
+        public void OutputAllKothNames()
         {
             foreach (KothConfig koth in CrunchNationKOTH.KOTHs)
             {
                 Context.Respond(koth.KothName);
 
             }
-
-
         }
     }
 }

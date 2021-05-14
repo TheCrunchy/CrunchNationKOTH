@@ -167,11 +167,20 @@ namespace CrunchNationKOTH
         private static string path = "";
         public static void LoadConfig()
         {
-            FileUtils utils = new FileUtils();
-            foreach (String s in Directory.GetFiles(Path.Combine(path + "//CrunchKOTH//")))
+            if (!Directory.Exists(path + "//CrunchKOTH"))
             {
-                KOTHs.Add(utils.ReadFromXmlFile<KothConfig>(path + "//CrunchKOTH//" + s + ".xml"));
+                Directory.CreateDirectory(path + "//CrunchKOTH//");
             }
+            FileUtils utils = new FileUtils();
+            foreach (String s in Directory.GetFiles(path + "//CrunchKOTH//"))
+            {
+              
+
+                KothConfig koth = utils.ReadFromXmlFile<KothConfig>(s);
+            
+                KOTHs.Add(koth);
+            }
+            Log.Info(KOTHs.Count);
         }
 
         public static KothConfig SaveConfig(String name, KothConfig config)
@@ -186,9 +195,12 @@ namespace CrunchNationKOTH
             path = this.StoragePath;
             KothConfig config = new KothConfig();
             FileUtils utils = new FileUtils();
+            if (!Directory.Exists(StoragePath + "//CrunchKOTH")){
+                Directory.CreateDirectory(StoragePath + "//CrunchKOTH");
+            }
             if (File.Exists(this.StoragePath + "//CrunchKOTH//example.xml"))
             {
-                config = utils.ReadFromXmlFile<KothConfig>(this.StoragePath + "//CrunchKOTH//config.xml");
+                config = utils.ReadFromXmlFile<KothConfig>(this.StoragePath + "//CrunchKOTH//example.xml");
                 utils.WriteToXmlFile<KothConfig>(this.StoragePath + "//CrunchKOTH//example.xml", config, false);
             }
             else
