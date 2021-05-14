@@ -11,8 +11,11 @@ namespace CrunchNationKOTH
         public double x = 100000;
         public double y = 100000;
         public double z = 100000;
-        public string KothName = "Thannian";
-
+        public string KothName = "example";
+        public string RewardTypeId = "Ingot";
+        public string RewardSubTypeId = "Iron";
+        public int RewardAmount = 1;
+        public Boolean enabled = false;
         public string KothBuildingOwner = "BOB";
         public long LootboxGridEntityId = 0;
         public string LootBoxTerminalName = "LOOT BOX";
@@ -45,6 +48,9 @@ namespace CrunchNationKOTH
         public DateTime nextCoreSpawn = DateTime.Now;
         public DateTime nextBroadcast = DateTime.Now;
         public Boolean CaptureStarted = false;
+
+        public Boolean IsDenialPoint = false;
+        public string DeniedKoth = "example";
 
     }
 }
