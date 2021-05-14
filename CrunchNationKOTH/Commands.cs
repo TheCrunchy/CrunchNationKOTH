@@ -13,11 +13,32 @@ namespace CrunchNationKOTH
     {
         [Command("koth unlock", "unlock koth")]
         [Permission(MyPromoteLevel.Admin)]
-        public void ContractDetails()
+        public void UnlockKoth(string name)
         {
-            CrunchNationKOTH.config.nextCaptureAvailable = DateTime.Now;
-            CrunchNationKOTH.config.nextCaptureInterval = DateTime.Now;
+            foreach (KothConfig koth in CrunchNationKOTH.KOTHs)
+            {
+                if (koth.KothName.Equals(name))
+                {
+                    koth.nextCaptureAvailable = DateTime.Now;
+                  koth.nextCaptureInterval = DateTime.Now;
+                    Context.Respond("Unlocked the koth");
+                }
+              
+            }
+         
           
+        }
+        [Command("koth output", "unlock koth")]
+        [Permission(MyPromoteLevel.Admin)]
+        public void OutputAllKothNames(string name)
+        {
+            foreach (KothConfig koth in CrunchNationKOTH.KOTHs)
+            {
+                Context.Respond(koth.KothName);
+
+            }
+
+
         }
     }
 }

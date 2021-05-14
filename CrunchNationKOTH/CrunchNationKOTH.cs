@@ -30,7 +30,7 @@ namespace CrunchNationKOTH
 {
     public class CrunchNationKOTH : TorchPluginBase
     {
-        private static List<KothConfig> KOTHs = new List<KothConfig>();
+        public static List<KothConfig> KOTHs = new List<KothConfig>();
         private static List<DateTime> captureIntervals = new List<DateTime>();
         private static Dictionary<String, int> amountCaptured = new Dictionary<String, int>();
        
@@ -168,7 +168,7 @@ namespace CrunchNationKOTH
         public static void LoadConfig()
         {
             FileUtils utils = new FileUtils();
-            foreach (String s in Directory.GetFiles(Path.Combine(path + "//CrunchKOTH//CapturePoints//")))
+            foreach (String s in Directory.GetFiles(Path.Combine(path + "//CrunchKOTH//")))
             {
                 KOTHs.Add(utils.ReadFromXmlFile<KothConfig>(path + "//CrunchKOTH//" + s + ".xml"));
             }
@@ -177,7 +177,7 @@ namespace CrunchNationKOTH
         public static KothConfig SaveConfig(String name, KothConfig config)
         {
             FileUtils utils = new FileUtils();
-            utils.WriteToXmlFile<KothConfig>(path + "//CrunchKOTH//CapturePoints//" + name+".xml", config);
+            utils.WriteToXmlFile<KothConfig>(path + "//CrunchKOTH" + name+".xml", config);
 
             return config;
         }
@@ -186,15 +186,15 @@ namespace CrunchNationKOTH
             path = this.StoragePath;
             KothConfig config = new KothConfig();
             FileUtils utils = new FileUtils();
-            if (File.Exists(this.StoragePath + "//CrunchKOTH//CapturePoints//example.xml"))
+            if (File.Exists(this.StoragePath + "//CrunchKOTH//example.xml"))
             {
-                config = utils.ReadFromXmlFile<KothConfig>(this.StoragePath + "//CrunchKOTH//CapturePoints//config.xml");
-                utils.WriteToXmlFile<KothConfig>(this.StoragePath + "//CrunchKOTH//CapturePoints//example.xml", config, false);
+                config = utils.ReadFromXmlFile<KothConfig>(this.StoragePath + "//CrunchKOTH//config.xml");
+                utils.WriteToXmlFile<KothConfig>(this.StoragePath + "//CrunchKOTH//example.xml", config, false);
             }
             else
             {
                 config = new KothConfig();
-                utils.WriteToXmlFile<KothConfig>(this.StoragePath + "//CrunchKOTH//CapturePoints//example.xml", config, false);
+                utils.WriteToXmlFile<KothConfig>(this.StoragePath + "//CrunchKOTH//example.xml", config, false);
             }
         }
         public static MyCubeGrid GetLootboxGrid(Vector3 position, KothConfig config)

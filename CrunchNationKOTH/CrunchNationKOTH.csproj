@@ -78,6 +78,7 @@
   <ItemGroup>
     <Compile Include="Commands.cs" />
     <Compile Include="CrunchNationKOTH.cs" />
+    <Compile Include="DenialPoint.cs" />
     <Compile Include="FacUtils.cs" />
     <Compile Include="FileUtils.cs" />
     <Compile Include="KothConfig.cs" />
