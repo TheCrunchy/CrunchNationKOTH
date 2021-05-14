@@ -439,7 +439,7 @@ namespace CrunchNationKOTH
                     {
                         if (den.IsDenied())
                             SendChatMessage("Denied point, no core spawn");
-                        return;
+                        continue;
                     }
                     if (!config.owner.Equals("NOBODY"))
                     {
