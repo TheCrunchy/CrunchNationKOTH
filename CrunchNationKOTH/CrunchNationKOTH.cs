@@ -235,6 +235,9 @@ namespace CrunchNationKOTH
                 }
                 foreach (KothConfig config in KOTHs)
                 {
+                    if (!config.enabled)
+                        continue;
+
                     bool contested = false;
                     Boolean hasActiveCaptureBlock = false;
                     // Log.Info("We capping?");
@@ -255,9 +258,10 @@ namespace CrunchNationKOTH
                         List<MyCubeGrid> NotAcmeGrids = new List<MyCubeGrid>();
 
 
-
+                        int entitiesInCapPoint = 0;
                         foreach (MyCubeGrid grid in MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere).OfType<MyCubeGrid>())
                         {
+                            entitiesInCapPoint++;
                             if (!contested)
                             {
                                 IMyFaction fac = FacUtils.GetPlayersFaction(FacUtils.GetOwner(grid));
@@ -284,7 +288,7 @@ namespace CrunchNationKOTH
                             //now check characters
                             foreach (MyCharacter character in MyAPIGateway.Entities.GetEntitiesInSphere(ref sphere).OfType<MyCharacter>())
                             {
-
+                                entitiesInCapPoint++;
                                 IMyFaction fac = FacUtils.GetPlayersFaction(character.GetPlayerIdentityId());
                                 if (fac != null)
                                 {
@@ -306,6 +310,14 @@ namespace CrunchNationKOTH
                             }
                         }
 
+                        if (entitiesInCapPoint == 0 && config.IsDenialPoint)
+                        {
+                            if (denials.TryGetValue(config.DeniedKoth, out DenialPoint den))
+                            {
+                                den.RemoveCap(config.KothName);
+                                SaveConfig(config.KothName, config);
+                            }
+                        }
                         if (!contested && hasActiveCaptureBlock && !config.CaptureStarted && !capturingNation.Equals(""))
                         {
                             config.CaptureStarted = true;
@@ -342,14 +354,15 @@ namespace CrunchNationKOTH
                                                 if (denials.TryGetValue(config.DeniedKoth, out DenialPoint den))
                                                 {
                                                     den.AddCap(config.KothName);
-                                                    SaveConfig(config.KothName, config);
                                                 }
                                                 else
                                                 {
-                                                    SaveConfig(config.KothName, config);
-                                                    den.AddCap(config.KothName);
+                                                    DenialPoint denial = new DenialPoint();
+                                                    denial.AddCap(config.KothName);
+                                                    denials.Add(config.DeniedKoth, denial);
                                                 }
-                                                return;
+                                                //exit this one because its a denial point and continue to the next config
+                                                continue;
                                             }
                                             config.amountCaptured += config.PointsPerCap;
                                
